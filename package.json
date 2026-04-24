@@ -1,19 +1,23 @@
 {
   "name": "manage-schedule-api",
   "version": "1.0.0",
-  "description": "later",
+  "description": "manage schedules application",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test"
+    "test": "npm run test",
+    "dev": "nodemon server.js"
   },
   "repository": {
     "type": "git",
-    "url": "later"
+    "url": "https://github.com/oussama-drifi/Manage-Schedule-API"
   },
   "author": "oussama drifi",
   "license": "ISC",
   "dependencies": {
     "express": "^5.2.1",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
     "nodemon": "^3.1.14"
   }
 }
