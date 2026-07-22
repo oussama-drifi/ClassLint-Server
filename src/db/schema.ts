@@ -1,3 +1,4 @@
+import { date } from "drizzle-orm/cockroach-core";
 import {
     boolean,
     integer,
@@ -5,9 +6,11 @@ import {
     pgTable,
     primaryKey,
     timestamp,
+    uniqueIndex,
     uuid,
     varchar,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm/sql/sql";
 
 // Enums
 
@@ -44,7 +47,7 @@ export const formateursTable = pgTable("formateurs", {
     email: varchar("email", { length: 255 }).notNull().unique(),
     minHeures: integer("min_heures").notNull(),
     maxHeures: integer("max_heures").notNull(),
-    type: formateurTypeEnum("type").notNull(),
+    type: formateurTypeEnum("type_formateur").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
 });
@@ -52,7 +55,7 @@ export const formateursTable = pgTable("formateurs", {
 export const modulesTable = pgTable("modules", {
     id: uuid("id").primaryKey().defaultRandom(),
     nom: varchar("nom", { length: 255 }).notNull(),
-    type: moduleTypeEnum("type").notNull(),
+    type: moduleTypeEnum("type_module").notNull(),
     masseHoraire: integer("masse_horaire").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
@@ -60,8 +63,8 @@ export const modulesTable = pgTable("modules", {
 
 export const semainesTable = pgTable("semaines", {
     id: uuid("id").primaryKey().defaultRandom(),
-    dateDebut: timestamp("date_debut").notNull(),
-    dateFin: timestamp("date_fin").notNull(),
+    dateDebut: date("date_debut").notNull(),
+    dateFin: date("date_fin").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
 });
@@ -80,7 +83,7 @@ export const seancesTable = pgTable("seances", {
     idFormateur: uuid("id_formateur").notNull().references(() => formateursTable.id),
     date: timestamp("date").notNull(),
     numSeance: integer("num_seance").notNull(),
-    type: seanceTypeEnum("type").notNull(),
+    type: seanceTypeEnum("type_seance").notNull(),
     tag: varchar("tag", { length: 255 }),
     idModule: uuid("id_module").notNull().references(() => modulesTable.id),
     idSemaine: uuid("id_semaine").notNull().references(() => semainesTable.id),
@@ -101,9 +104,12 @@ export const affectationsTable = pgTable("affectations", {
     idFormateur: uuid("id_formateur").notNull().references(() => formateursTable.id),
     idModule: uuid("id_module").notNull().references(() => modulesTable.id),
     heuresConsommees: integer("heures_consommees").notNull().default(0),
-    principale: boolean("principale").notNull().default(false),
+    principale: boolean("principale").notNull().default(true),
 }, (t) => [
     primaryKey({ columns: [t.idGroupe, t.idFormateur, t.idModule] }),
+    uniqueIndex("one_principal_per_group_module")
+        .on(t.idGroupe, t.idModule)
+        .where(sql`${t.principale} = true`)
 ]);
 
 export const absencesTable = pgTable("absences", {
